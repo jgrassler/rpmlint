@@ -40,6 +40,7 @@ setup(
 
     install_requires=[
         'pyxdg',
+        'requirements-parser',
         'rpm',
         'toml',
         'importlib-metadata;python_version<"3.8"',

@@ -1,5 +1,7 @@
 import os
 import re
+import requirements
+import sys
 
 from rpmlint.checks.AbstractCheck import AbstractFilesCheck
 from rpmlint.helpers import byte_to_string
@@ -8,6 +10,7 @@ from rpmlint.helpers import byte_to_string
 WARNS = {
     "tests": "python-tests-in-site-packages",
     "doc": "python-doc-in-site-packages",
+    "req-missing": "python-egginfo-require-not-in-spec",
     "src": "python-src-in-site-packages"
   }
 
@@ -58,23 +61,75 @@ class PythonCheck(AbstractFilesCheck):
 
       # egg-info is a directory, check requires.txt against spec's Requires.
       # We will ignore packages that do not have a requires.txt here.
-      requires_file = pkg.dirName() + filename + "requires.txt"
+      requires_path = pkg.dirName() + filename + "/" + "requires.txt"
       if os.path.isfile(requires_path):
         self.compare_requires(pkg, requires_path)
 
-    def check_egginfo_requires(self, pkg, requires_path):
-      from_egg = egg_requires(requires_path)
-      from_spec = package_requires(self, pkg)
+    def compare_requires(self, pkg, requires_path):
+      """
+      Check whether each egg name from requirements.txt occurs in the spec's
+      Requirements somewhere and output a warning if it's nowhere to be found.
+      """
+      from_egg = self.egg_requires(requires_path)
+      from_spec = self.package_requires(pkg)
+
+      for egg_require in from_egg:
+        found = False
+        for spec_require in from_spec:
+
+          if egg_require in spec_require:
+            found = True
+
+        if not found:
+          self.output.add_info("W", pkg, WARNS["req-missing"], egg_require)
 
     def egg_requires(self, requires_path):
       """
-      Generate a dictionary of requires/versions from an egg-info directory's
-      requires.txt.
+      Generate a flat list of unversioned, lowercase require names from an
+      egg-info directory's requires.txt.
       """
-      raise NotImplementedError
+
+      f = open(requires_path, 'r')
+
+      lines = ""
+      requires = []
+
+      for line in f.readlines():
+        # FIXME: this code ignores conditional sections, such as
+        #
+        #   [:python_version < '3']
+        #
+        # It does this because requirements-parser cannot deal with these
+        # sections, hence we just filter out the section header. The best
+        # approach for fixing this would be submitting patch against
+        # requirements-parser that adds the capability to deal with sections by
+        # adding such conditionals to every require in that section as
+        # environment markers. Once such a patch exists, we can filter such
+        # markers here on a per-requirement basis.
+
+        if line.startswith("["):
+          continue
+        lines += line
+
+      requires_raw = requirements.parser.parse(lines)
+
+      for r in requires_raw:
+        requires.append(r.name.lower())
+
+      f.close()
+
+      return requires
 
     def package_requires(self, pkg):
       """
-      Generate a dictionary of requires/versions from the package's specs.
+      Generate a flat list of unversioned, lowercase requirement names from the
+      package's, spec.
       """
-      raise NotImplementedError
+
+      requires_raw = pkg.requires
+      requires = []
+
+      for r in requires_raw:
+        requires.append(r[0].lower())
+
+      return requires
