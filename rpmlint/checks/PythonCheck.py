@@ -1,8 +1,6 @@
+import os
 import re
 
-from os import path
-
-from rpm import expandMacro
 from rpmlint.checks.AbstractCheck import AbstractFilesCheck
 from rpmlint.helpers import byte_to_string
 
@@ -28,12 +26,12 @@ WARN_PATHS = {
     "/usr/lib*/python*/site-packages/src": WARNS["src"]
   }
 
-class PythonFileCheck(AbstractFilesCheck):
+class PythonCheck(AbstractFilesCheck):
     def __init__(self, config, output):
         super().__init__(config, output, r'.*')
 
     def check_file(self, pkg, filename):
-      egg_info_re = r'.*egg-info$'
+      egg_info_re = re.compile('.*egg-info$')
 
       if egg_info_re.match(filename):
         self.check_egginfo(pkg, filename)
@@ -53,7 +51,7 @@ class PythonFileCheck(AbstractFilesCheck):
       """
       # Check for (deprecated) distutils style metadata.
       if os.path.isfile(pkg.dirName() + filename):
-        self.output.add_info("E", pkg, ERRS["egg-distutils"])
+        self.output.add_info("E", pkg, ERRS["egg-distutils"], filename)
         # No need to proceed any further here since distutils style metadata
         # doesn't have requirements information.
         return
@@ -66,6 +64,7 @@ class PythonFileCheck(AbstractFilesCheck):
 
     def check_egginfo_requires(self, pkg, requires_path):
       from_egg = egg_requires(requires_path)
+      from_spec = package_requires(self, pkg)
 
     def egg_requires(self, requires_path):
       """
