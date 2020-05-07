@@ -25,21 +25,17 @@ ERRS = {
 # Paths that shouldn't be in any packages, ever, because they clobber global
 # name space.
 ERR_PATHS = {
-    "/usr/lib*/python*/site-packages/test": ERRS["tests"],
-    "/usr/lib*/python*/site-packages/tests": ERRS["tests"],
-    "/usr/lib*/python*/site-packages/doc": ERRS["doc"],
-    "/usr/lib*/python*/site-packages/docs": ERRS["doc"],
-    "/usr/lib*/python*/site-packages/src": ERRS["src"]
+    "/usr/lib[^/]*/python[^/]*/site-packages/tests?$": ERRS["tests"],
+    "/usr/lib[^/]*/python[^/]*/site-packages/docs?$": ERRS["doc"],
+    "/usr/lib[^/]*/python[^/]*/site-packages/src$": ERRS["src"]
   }
 
 # Paths that shouldn't be in any packages, but might need to be under
 # sufficiently special circumstances.
 WARN_PATHS = {
-    "/usr/lib*/python*/site-packages/\w+/test": WARNS["tests"],
-    "/usr/lib*/python*/site-packages/\w+/tests": WARNS["tests"],
-    "/usr/lib*/python*/site-packages/\w+/doc": WARNS["doc"],
-    "/usr/lib*/python*/site-packages/\w+/docs": WARNS["doc"],
-    "/usr/lib*/python*/site-packages/\w+/src": WARNS["src"]
+    "/usr/lib[^/]*/python[^/]*/site-packages/[^/]+/tests?$": WARNS["tests"],
+    "/usr/lib[^/]*/python[^/]*/site-packages/[^/]+/docs?$": WARNS["doc"],
+    "/usr/lib[^/]*/python[^/]*/site-packages/[^/]+/src$": WARNS["src"]
   }
 
 class PythonCheck(AbstractFilesCheck):
@@ -56,13 +52,13 @@ class PythonCheck(AbstractFilesCheck):
         path_re = re.compile(path)
 
         if path_re.match(filename):
-          self.output.add_info("W", pkg, WARN_PATHS[path])
+          self.output.add_info("W", pkg, WARN_PATHS[path], filename)
 
       for path in ERR_PATHS:
         path_re = re.compile(path)
 
         if path_re.match(filename):
-          self.output.add_info("E", pkg, WARN_PATHS[path])
+          self.output.add_info("E", pkg, ERR_PATHS[path], filename)
 
     def check_egginfo(self, pkg, filename):
       """
