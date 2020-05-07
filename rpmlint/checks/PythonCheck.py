@@ -94,7 +94,7 @@ class PythonCheck(AbstractFilesCheck):
             found = True
 
         if not found:
-          self.output.add_info("W", pkg, WARNS["req-missing"], egg_require)
+          self.output.add_info("W", pkg, WARNS["req-missing"], requires_path, ":", egg_require)
 
     def egg_requires(self, requires_path):
       """
@@ -102,7 +102,12 @@ class PythonCheck(AbstractFilesCheck):
       egg-info directory's requires.txt.
       """
 
-      f = open(requires_path, 'r')
+      try:
+        f = open(requires_path, 'r')
+      except Exception:
+        # Some .egg-info directories do not have a requires.txt, so this may
+        # fail.
+        return
 
       lines = ""
       requires = []
