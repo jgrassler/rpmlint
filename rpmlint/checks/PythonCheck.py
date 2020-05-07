@@ -8,25 +8,39 @@ from rpmlint.helpers import byte_to_string
 
 # Warning messages
 WARNS = {
+    "tests": "python-tests-in-package",
+    "doc": "python-doc-in-package",
+    "req-missing": "python-egginfo-require-not-in-spec",
+    "src": "python-src-package"
+  }
+
+# Error messages
+ERRS = {
+    "egg-distutils": "python-egg-info-distutils-style",
+    "bad-requires": "python-requires-egg-info-mismatch",
     "tests": "python-tests-in-site-packages",
     "doc": "python-doc-in-site-packages",
-    "req-missing": "python-egginfo-require-not-in-spec",
     "src": "python-src-in-site-packages"
   }
 
-# Errorr messages
-ERRS = {
-    "egg-distutils": "python-egg-info-distutils-style",
-    "bad-requires": "python-requires-egg-info-mismatch"
+# Paths that shouldn't be in any packages, ever, because they clobber global
+# name space.
+ERR_PATHS = {
+    "/usr/lib*/python*/site-packages/test": ERRS["tests"],
+    "/usr/lib*/python*/site-packages/tests": ERRS["tests"],
+    "/usr/lib*/python*/site-packages/doc": ERRS["doc"],
+    "/usr/lib*/python*/site-packages/docs": ERRS["doc"],
+    "/usr/lib*/python*/site-packages/src": ERRS["src"]
   }
 
-
+# Paths that shouldn't be in any packages, but might need to be under
+# sufficiently special circumstances.
 WARN_PATHS = {
-    "/usr/lib*/python*/site-packages/test": WARNS["tests"],
-    "/usr/lib*/python*/site-packages/tests": WARNS["tests"],
-    "/usr/lib*/python*/site-packages/doc": WARNS["doc"],
-    "/usr/lib*/python*/site-packages/docs": WARNS["doc"],
-    "/usr/lib*/python*/site-packages/src": WARNS["src"]
+    "/usr/lib*/python*/site-packages/\w+/test": WARNS["tests"],
+    "/usr/lib*/python*/site-packages/\w+/tests": WARNS["tests"],
+    "/usr/lib*/python*/site-packages/\w+/doc": WARNS["doc"],
+    "/usr/lib*/python*/site-packages/\w+/docs": WARNS["doc"],
+    "/usr/lib*/python*/site-packages/\w+/src": WARNS["src"]
   }
 
 class PythonCheck(AbstractFilesCheck):
@@ -39,13 +53,17 @@ class PythonCheck(AbstractFilesCheck):
       if egg_info_re.match(filename):
         self.check_egginfo(pkg, filename)
 
-      # Output warnings for paths that shouldn't be in any packages, but might
-      # need to be under sufficiently special circumstances.
       for path in WARN_PATHS:
         path_re = re.compile(path)
 
         if path_re.match(filename):
           self.output.add_info("W", pkg, WARN_PATHS[path])
+
+      for path in ERR_PATHS:
+        path_re = re.compile(path)
+
+        if path_re.match(filename):
+          self.output.add_info("E", pkg, WARN_PATHS[path])
 
     def check_egginfo(self, pkg, filename):
       """
