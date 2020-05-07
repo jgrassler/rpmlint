@@ -11,13 +11,12 @@ WARNS = {
     "tests": "python-tests-in-package",
     "doc": "python-doc-in-package",
     "req-missing": "python-egginfo-require-not-in-spec",
-    "src": "python-src-package"
+    "src": "python-src-in-package"
   }
 
 # Error messages
 ERRS = {
     "egg-distutils": "python-egg-info-distutils-style",
-    "bad-requires": "python-requires-egg-info-mismatch",
     "tests": "python-tests-in-site-packages",
     "doc": "python-doc-in-site-packages",
     "src": "python-src-in-site-packages"
