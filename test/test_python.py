@@ -13,17 +13,6 @@ def pythoncheck():
     return output, test
 
 
-@pytest.mark.parametrize('package', ['binary/pythoncheck-python-egginfo-require-not-in-spec'])
-def test_egginfo_require_not_in_spec(tmpdir, package, pythoncheck):
-    output, test = pythoncheck
-    test.check(get_tested_package(package, tmpdir))
-    out = output.print_results(output.results)
-    assert 'W: python-egginfo-require-not-in-spec /usr/lib/python2.7/site-packages/mysetuputilspackage.egg-info/requires.txt setuptools' in out
-    assert 'W: python-egginfo-require-not-in-spec /usr/lib/python2.7/site-packages/mysetuputilspackage.egg-info/requires.txt colorama' in out
-    assert 'W: python-egginfo-require-not-in-spec /usr/lib/python3.8/site-packages/mysetuputilspackage.egg-info/requires.txt setuptools' in out
-    assert 'W: python-egginfo-require-not-in-spec /usr/lib/python3.8/site-packages/mysetuputilspackage.egg-info/requires.txt colorama' in out
-
-
 @pytest.mark.parametrize('package', ['binary/pythoncheck-python-doc-in-package'])
 def test_python_doc_in_package(tmpdir, package, pythoncheck):
     output, test = pythoncheck

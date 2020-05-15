@@ -5,8 +5,6 @@ doc/ or docs/ directory in package directory. Documentation should go into %{doc
 python-src-in-package="""
 src/ directory included in %{python_sitelib}/<pkgname>. This should be in a separate -src package.
 """
-python-egginfo-require-not-in-spec="""
-Requires pulled in by the spec do not match upstream requires.txt. Please double-check."""
 python-egg-info-distutils-style="""
 The package's egg-info is a distutils style file, rather than a setuptools
 style directory. Please convert to setuptools style.
